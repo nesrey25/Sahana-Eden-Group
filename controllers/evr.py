@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
-
+#registers individuals or families into the Sahana Eden project. Allows for the update of individuals that come through 
+#the Sahana Eden project or through a specific location that an individual (or a group) comes through 
+#prompts for data entry of a person EX: resident of __________
+#self updates and outputs the information of an individual using 'field' and 'label' 
 """
     Evacuees Registry
 """
-
+#allows the string module to hold everything in controller 
+#allows resourcename to hold everything that functions holds 
 module = request.controller
 resourcename = request.function
 
+#HTTP: PUT, DELETE, HEAD and OPTIONS 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
-
+#Response Content 
 s3db.set_method("pr", "group",
                 method = "add_members",
                 action = s3db.evr_AddGroupMembers)
@@ -30,6 +35,8 @@ def index_alt():
     s3_redirect_default(URL(f="person"))
 
 # -----------------------------------------------------------------------------
+#person function that allows for th input of a new person into the Sahana Eden registry
+#"Creates a new contact" in the system like process that allows Sahana Eden to keep track of who has used a registered location or car
 def person():
     """
         REST controller to register evacuees
@@ -58,7 +65,7 @@ def person():
                                              fiscal_code),
                                 null=""
                                 )
-
+        #report data of an individual that is logged into the file system when checked into a Sahana Eden site
         report_fields = ["id",
                          "last_name",
                          "case.organisation_id",
@@ -70,9 +77,10 @@ def person():
                          "shelter_registration.check_in_date",
                          "shelter_registration.check_out_date",
                          ]
+        #registres a specific unit to that individual 
         if settings.get_cr_shelter_housing_unit_management():
             report_fields.append("shelter_registration.shelter_unit_id")
-
+        #levels update, add elements to the list 
         for level in levels:
             lfield = "location_id$%s" % level
             report_fields.append(lfield)
@@ -94,6 +102,7 @@ def person():
                        "gender",
                        "date_of_birth",
                        ]
+        #sets link to the organization/shelter/housing that the individual is staying at in the system 
         if settings.get_evr_link_to_organisation():
             list_fields.append("case.organisation_id")
         list_fields.append("shelter_registration.shelter_id")
@@ -126,6 +135,7 @@ def person():
                                             "number of a person, separated by spaces. "
                                             "You may use % as wildcard."),
                                 ),
+                 #Sets a specific piece of data to a string name that can be accessed later on as a label(displays text of an image to the user)
                     S3LocationFilter("address.location_id",
                                     label = T("Current Residence"),
                                     levels = levels,
@@ -147,7 +157,7 @@ def person():
                                     ),
                 ]
 
-                # Custom Form for Persons
+                # Creates a custom form for individuals or for a group that is checking in 
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm("case.organisation_id",
                                             "first_name",
@@ -181,6 +191,7 @@ def person():
                 if settings.get_cr_shelter_housing_unit_management():
                     # Dynamically update options for shelter_unit_id
                     # when a shelter_id gets selected
+                    # Access direct request from s3 and import it to SEPARATORS
                     from s3 import SEPARATORS
                     options = {"trigger": "shelter_id",
                                "target": "shelter_unit_id",
@@ -190,7 +201,7 @@ def person():
                     s3.jquery_ready.append('''$.filterOptionsS3(%s)''' % \
                                            json.dumps(options,
                                                       separators=SEPARATORS))
-
+        #sets the field data in a pdf or an excel like spreadsheet 
         elif r.representation in ("pdf", "xls"):
             # List fields
             list_fields = ["id",
@@ -244,7 +255,7 @@ def group():
                                               (T("Contact"), "contact.value")
                                               ],
                                )
-
+        #If there is a group checking into the Sahana Eden Project 
             if r.interactive:
                 # Override the options for group_type,
                 # only show evr_group_types
@@ -274,6 +285,7 @@ def group():
             if not component:
                 update_url = URL(args=["[id]", "group_membership"])
             elif component.name == "group_membership" and not r.method:
+                # Allows the user to enter a new member or members to the Sahana Eden system 
                 # Custom add-button that redirects to the add_members
                 # action (opens on a separate tab)
                 buttons = output.get("buttons", {})
