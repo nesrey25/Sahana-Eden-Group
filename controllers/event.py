@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# return s3_rest_controller 
+    #what is s3_rest_controller???
 
 """
     Event Module - Controllers
@@ -13,12 +15,14 @@ if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
+#index function that calls the home page
 def index():
     """ Module's Home Page """
 
     return s3db.cms_index(module, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
+#index function that displays the homepage for those that are not admin users
 def index_alt():
     """
         Module homepage for non-Admin users when no CMS content found
@@ -33,6 +37,7 @@ def create():
     redirect(URL(f="event", args="create"))
 
 # -----------------------------------------------------------------------------
+#main event function that updates, calls, and diplays all controllers 
 def event():
     """
         RESTful CRUD controller
@@ -89,6 +94,7 @@ def event():
     return s3_rest_controller(rheader = s3db.event_rheader)
 
 # -----------------------------------------------------------------------------
+#function that returns the location to where the disaster is at and outputs to user 
 def event_location():
     """
         RESTful CRUD controller
@@ -97,6 +103,7 @@ def event_location():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+#displays to the user what kind of natural disaster was at said location and event 
 def event_type():
     """
         RESTful CRUD controller
@@ -105,6 +112,7 @@ def event_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+#displays to the user anything that may have gone on during the disaster. EX: goods required at such 
 def incident_type():
     """
         RESTful CRUD controller
@@ -113,12 +121,14 @@ def incident_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+#defines the incident and sets assets, human reources, the organizations, and the site of the disaster
 def incident():
     """
         RESTful CRUD controller
     """
 
     # Pre-process
+    #use raw (r.) so escape code can be ignored (endline) 
     def prep(r):
         if r.interactive or r.representation == "aadata":
             if r.component:
@@ -132,6 +142,7 @@ def incident():
                     s3db.configure("gis_config",
                                    deletable = False,
                                    )
+                    #creates a button in T that is called update in configurations
                     s3.crud.submit_button = T("Update")
                 elif cname in ("asset", "human_resource", "organisation", "site"):
 
@@ -147,16 +158,17 @@ def incident():
                     # Default Event in the link to that of the Incident
                     ltable = s3db.table("event_%s" % cname)
                     if ltable:
+                        #f. creates raw  f. strings that directly insert the names from the current scope in the format string
                         f = ltable.event_id
                         f.default = r.record.event_id
                         f.readable = f.writable = False
                         if cname in ("asset", "human_resource"):
-                            # DateTime
+                            # Date/Time for the incident 
                             for f in (ltable.start_date, ltable.end_date):
                                 f.requires = IS_EMPTY_OR(IS_UTC_DATETIME())
                                 f.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
                                 f.widget = S3CalendarWidget(timepicker = True)
-
+                #allows for input of the user reporting an incident asset 
                 elif cname == "incident_asset":
 
                     atable = s3db.table("budget_allocation")
@@ -180,7 +192,7 @@ def incident():
                         f.widget = S3CalendarWidget(timepicker = True)
 
             elif r.method not in ("read", "update"):
-                # Create or ListCreate
+                # Create or ListCreate that allows for data input 
                 table = r.table
                 table.closed.writable = table.closed.readable = False
                 table.end_date.writable = table.end_date.readable = False
@@ -216,6 +228,7 @@ def incident():
     return output
 
 # -----------------------------------------------------------------------------
+#function that deals with the incident reports and outputting the reports to the user 
 def incident_report():
     """
         RESTful CRUD controller
@@ -270,7 +283,7 @@ def sitrep():
         try:
             sitrep_id = int(request.args(0))
         except:
-            # Multiple record method
+            # Multiple record method, takes account the records entered by user 
             pass
         else:
             dtable = s3db.s3_table
@@ -336,6 +349,7 @@ def template():
                               )
 
 # -----------------------------------------------------------------------------
+#Function that sets resources and updates them as more are added to a specific evemt
 def resource():
     """
         RESTful CRUD controller
@@ -346,7 +360,7 @@ def resource():
             if r.method in ("create", "update"):
                 table = r.table
                 if r.method == "create":
-                    # Enable Location field
+                    # Enable Location field, field represents the location id, which is further able to be read by the user in its ooutput 
                     field = table.location_id
                     field.readable = field.writable = True
 
@@ -383,6 +397,8 @@ def person():
     return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
+#function that deals with the team/group and their contributions to the disaster. 
+#Lists the team's description, id, status, and any comments 
 def group():
     """
         Module-specific controller for Teams
@@ -420,12 +436,14 @@ def group():
     return s3_rest_controller("pr", "group")
 
 # -----------------------------------------------------------------------------
+#team function that states if events are not equal to team, then return s3_rest_controller 
 def team():
     """ Events <> Teams """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+#updates team status as a specific event 
 def team_status():
     """ Team statuses """
 
@@ -444,11 +462,13 @@ def organisation():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+# Send messages to people and teams on the program screen that can be an update on something,
+# an alert that something is being requested, etc. 
 def compose():
-    """ Send message to people/teams """
+
 
     vars = request.vars
-
+#if else statement that will output message to the user or state that a record was not found under search before being sent 
     if "hrm_id" in vars:
         id = vars.hrm_id
         fieldname = "hrm_id"
@@ -456,7 +476,7 @@ def compose():
         htable = s3db.hrm_human_resource
         pe_id_query = (htable.id == id) & \
                       (htable.person_id == table.id)
-        title = T("Send a message to this person")
+        title = T("Send a message to this person") 
     else:
         session.error = T("Record not found")
         redirect(URL(f="index"))
@@ -469,11 +489,12 @@ def compose():
 
     pe_id = pe.pe_id
 
-    # Get the individual's communications options & preference
+    # Get the individual's communications options & preference, how the user would like to communicate through the program 
     table = s3db.pr_contact
     contact = db(table.pe_id == pe_id).select(table.contact_method,
                                               orderby="priority",
                                               limitby=(0, 1)).first()
+   #If else that deals with contact communication check 
     if contact:
         s3db.msg_outbox.contact_method.default = contact.contact_method
     else:
@@ -488,7 +509,7 @@ def compose():
     # Create the form
     output = msg.compose(recipient = pe_id,
                          url = url)
-
+    #returns output 
     output["title"] = title
     response.view = "msg/compose.html"
     return output
