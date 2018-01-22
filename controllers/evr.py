@@ -2,7 +2,11 @@
 #registers individuals or families into the Sahana Eden project. Allows for the update of individuals that come through 
 #the Sahana Eden project or through a specific location that an individual (or a group) comes through 
 #prompts for data entry of a person EX: resident of __________
-#self updates and outputs the information of an individual using 'field' and 'label' 
+    #Different functions that are called throughout the code 
+        #self updates and outputs the information of an individual using 'field' and 'label' 
+        #levels: Set the root logger level to the specified level
+        #method: a function that takes a class instance as its first parameter. Methods are members of classes
+        #
 """
     Evacuees Registry
 """
@@ -12,6 +16,8 @@ module = request.controller
 resourcename = request.function
 
 #HTTP: PUT, DELETE, HEAD and OPTIONS 
+#if statement that if an error occurs, the user is directed to the error 404 page
+#if information goes through and has access, then the user is allowed to add new sahana eden members or groups to the program 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 #Response Content 
@@ -20,12 +26,14 @@ s3db.set_method("pr", "group",
                 action = s3db.evr_AddGroupMembers)
 
 # -----------------------------------------------------------------------------
+#retruns the module home page 
 def index():
     """ Module's Home Page """
 
     return s3db.cms_index(module, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
+#homepage for non-admin users
 def index_alt():
     """
         Module homepage for non-Admin users when no CMS content found
@@ -35,7 +43,7 @@ def index_alt():
     s3_redirect_default(URL(f="person"))
 
 # -----------------------------------------------------------------------------
-#person function that allows for th input of a new person into the Sahana Eden registry
+#person function that allows for the input of a new person into the Sahana Eden registry
 #"Creates a new contact" in the system like process that allows Sahana Eden to keep track of who has used a registered location or car
 def person():
     """
