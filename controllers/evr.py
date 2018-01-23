@@ -6,7 +6,7 @@
         #self updates and outputs the information of an individual using 'field' and 'label' 
         #levels: Set the root logger level to the specified level
         #method: a function that takes a class instance as its first parameter. Methods are members of classes
-        #
+        #if not: The Boolean expression in a conditional statement that determines which branch is executed
 """
     Evacuees Registry
 """
