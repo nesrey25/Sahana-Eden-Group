@@ -169,7 +169,7 @@ def person():
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm("case.organisation_id",
                                             "first_name",
-                                            #"middle_name",
+                                            "middle_name",
                                             "last_name",
                                             "date_of_birth",
                                             "location_id",
